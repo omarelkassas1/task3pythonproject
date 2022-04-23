@@ -1,0 +1,136 @@
+import random
+import math
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np6
+from roboticstoolbox import Bicycle, RandomPath, VehicleIcon
+from math import pi , atan2
+import matplotlib.pyplot as plt
+anim = VehicleIcon('robot', scale=2)
+veh = Bicycle(
+ animation=anim,
+ control=(RandomPath),
+ dim=10,
+ )
+veh.init(plot=True)
+
+
+#initialise the robot's start coordinates, target coordinates, and number of obstacles in the map
+start_x = int(input("Enter the x coordinate of the start point: "))
+start_y = int(input("Enter the y coordinate of the start point: "))
+target_x = int(input("Enter the x coordinate of the target point: "))
+target_y = int(input("Enter the y coordinate of the target point: "))
+no_of_obstacles = int(input("Enter the number of obstacles: "))
+obstacle_list = []
+obstacle_x = []
+obstacle_y = []
+obstacle_radius = []
+obstacle_theta = []
+obstacle_delta = []
+
+def update_target_angle():
+    global target_angle
+    target_angle = math.atan2((target_y-start_y),(target_x-start_x)) * 180 / math.pi
+    #print("The target angle is: " + str(target_angle))
+
+def update_distance_to_target():
+    global distance_to_target
+    distance_to_target = math.sqrt(((target_x - start_x)*2) + ((target_y - start_y)*2))
+    #print("The distance to the target is: " + str(distance_to_target))
+
+def update_obstacle_list():
+    global obstacle_list
+    obstacle_list = random.sample(range(1, 400), no_of_obstacles)
+    for i in range (0, no_of_obstacles):
+        obstacle_x.append(obstacle_list[i] // 20)
+        obstacle_y.append(obstacle_list[i] % 20)
+    #print("The coordinates of the obstacles are: " + str(obstacle_list))
+
+def update_obstacle_theta():
+    global obstacle_theta
+    for i in range (0, no_of_obstacles):
+        obstacle_theta.append(math.atan2((obstacle_y[i] - start_y), (obstacle_x[i] - start_x)) * 180 / math.pi)
+
+def update_obstacle_radius():
+    global obstacle_radius
+    for i in range (0, no_of_obstacles):
+        obstacle_radius.append(math.sqrt(((obstacle_x[i] - start_x)*2) + ((obstacle_y[i] - start_y)*2)))
+
+def update_obstacle_delta():
+    global obstacle_delta
+    for i in range (0, no_of_obstacles):
+        obstacle_delta.append(abs(obstacle_theta[i] - target_angle))
+
+def update_start_coordinates():
+    global start_x
+    global start_y
+    start_x = start_x + 1
+    start_y = start_y + 1
+
+def plot_map():
+    global fig
+    global ax
+    global obstacle_x
+    global obstacle_y
+    global obstacle_radius
+    global obstacle_patch
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.set_xlim([0, 20])
+    ax.set_ylim([0, 20])
+    for i in range (0, no_of_obstacles):
+        obstacle_patch = patches.Circle((obstacle_x[i], obstacle_y[i]), 0.5, color='blue')
+        ax.add_patch(obstacle_patch)
+    ax.plot([start_x], [start_y], marker='o', markersize=5, color="red")
+    ax.plot([target_x], [target_y], marker='o', markersize=5, color="green")
+
+def display_obstacle_delta():
+    global obstacle_delta
+    #for i in range (0, no_of_obstacles):
+        #print("The delta of obstacle " + str(i) + " is: " + str(obstacle_delta[i]))
+
+def check_for_obstacles():
+    global obstacle_delta
+    for i in range (0, no_of_obstacles):
+        if obstacle_delta[i] < 30:
+            print("Obstacle in the way")
+            update_start_coordinates()
+            update_target_angle()
+            update_distance_to_target()
+            update_obstacle_list()
+            update_obstacle_theta()
+            update_obstacle_radius()
+            update_obstacle_delta()
+            plot_map()
+        else:
+            print("No obstacles in the way")
+            update_start_coordinates()
+            update_target_angle()
+            update_distance_to_target()
+            update_obstacle_list()
+            update_obstacle_theta()
+            update_obstacle_radius()
+            update_obstacle_delta()
+            plot_map()
+
+def check_if_reached():
+    global distance_to_target
+    if distance_to_target < 0.5:
+        return True
+    else:
+        return False
+
+update_target_angle()
+update_distance_to_target()
+update_obstacle_list()
+update_obstacle_theta()
+update_obstacle_radius()
+update_obstacle_delta()
+display_obstacle_delta()
+plot_map()
+
+while check_if_reached() == False:
+    check_for_obstacles()
+    break
+
+print("You have reached the target")
